@@ -112,15 +112,14 @@ lime_explainer = LimeTabularExplainer(
     discretize_continuous= True
 )
 
-# ========== 4. 随机抽取 10% 样本并聚合 LIME 权重 ==========
+# ========== 4. LIME Weight ==========
 n_total = len(X_test)
-n_sample = max(1, int(0.05 * n_total))           # 至少抽 1 个样本
-rng = np.random.RandomState(42)                 # 固定种子，可选
+n_sample = max(1, int(0.05 * n_total))           
+rng = np.random.RandomState(42)                 
 sample_indices = rng.choice(n_total, size=n_sample, replace=False)
 
 agg_weights = defaultdict(list)
 
-# 把 sample_indices 包在 tqdm 中，tqdm 会自动渲染进度条
 for idx in tqdm(sample_indices, desc='LIME Progress', unit='样本'):
     exp = lime_explainer.explain_instance(
         data_row    = X_test[idx],
@@ -132,10 +131,10 @@ for idx in tqdm(sample_indices, desc='LIME Progress', unit='样本'):
         feat_name = ext_cols[feat_idx]
         agg_weights[feat_name].append(abs(weight))
 
-# 计算平均绝对权重
+# Average Weight
 mean_abs_weights = {feat: np.mean(ws) for feat, ws in agg_weights.items()}
 
-# 排序并可视化
+# Visualization
 sorted_feats = sorted(mean_abs_weights, key=lambda f: mean_abs_weights[f], reverse=True)
 sorted_vals  = [mean_abs_weights[f] for f in sorted_feats]
 
@@ -157,7 +156,7 @@ rng = np.random.RandomState(42)
 idxs = rng.choice(n_total, size=n_sample, replace=False)
 X_sub = X_test[idxs]
 
-# 2. 构造 TreeExplainer，使用 interventional 扰动以支持 probability 空间
+# 2. TreeExplainer 
 explainer = shap.TreeExplainer(
     rf,
     data=X_train,
@@ -165,20 +164,20 @@ explainer = shap.TreeExplainer(
     model_output="probability"
 )
 
-# 3. 分批计算 SHAP 值并显示进度
+# 3. SHAP
 batches = np.array_split(X_sub, 5)
 shap_list = []
 
-for batch in tqdm(batches, desc="SHAP 计算进度", unit="批"):
+for batch in tqdm(batches, desc="SHAP", unit="batch"):
     # 返回 [shap_class0, shap_class1], 每个 shape=(batch_size, n_features)
     sv = explainer.shap_values(batch)
-    shap_list.append(sv[1])  # 取正类 class=1 的贡献
+    shap_list.append(sv[1]) 
 
-# 4. 合并 & 计算平均绝对 SHAP 值
+# 4. Average SHAP
 shap_all  = np.vstack(shap_list)                # shape=(n_sample, n_features)
 mean_shap = np.mean(np.abs(shap_all), axis=0)   # shape=(n_features,)
 
-# 5. 排序并可视化
+# 5. Visualization
 order        = np.argsort(mean_shap)[::-1]
 sorted_feats = [ext_cols[i] for i in order]
 sorted_vals  = mean_shap[order]
