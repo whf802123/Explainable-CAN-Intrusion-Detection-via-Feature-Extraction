@@ -82,7 +82,7 @@ svm.fit(Xtr, y_train)
 y_pred = svm.predict(Xte)
 scores = svm.decision_function(Xte)
 
-print(f"\n使用 top {top_k} 特征时，accuracy：{accuracy_score(y_test, y_pred):.4f}\n")
+print(f"\n When top {top_k} ，accuracy：{accuracy_score(y_test, y_pred):.4f}\n")
 precision = precision_score(y_test, y_pred, average='weighted', zero_division=0)
 recall    = recall_score(y_test, y_pred, average='weighted', zero_division=0)
 f1        = f1_score(y_test, y_pred, average='weighted', zero_division=0)
@@ -91,7 +91,6 @@ print(f"Precision: {precision:.4f}")
 print(f"Recall:    {recall:.4f}")
 print(f"F1-Score:  {f1:.4f}\n")
 
-print("分类报告：")
 print(classification_report(y_test, y_pred, target_names=class_names, zero_division=0))
 
 cm = confusion_matrix(y_test, y_pred)
