@@ -12,11 +12,11 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 import itertools
 
-# ========== Step 1: Load enhanced CSV ==========
+# ========== Load enhanced CSV ==========
 csv_path = r'C:\\Users\\Administrator\\Desktop\\enhanced-Car-Hacking.csv'
 df = pd.read_csv(csv_path, encoding='utf-8')
 
-# ========== Step 2: Convert raw fields to numeric ==========
+# ========== Convert raw fields to numeric ==========
 df['Timestamp'] = pd.to_numeric(df['Timestamp'], errors='coerce')
 df['Data'] = df['Data'].fillna('').astype('category').cat.codes
 
@@ -33,7 +33,7 @@ def parse_id(x):
 
 df['Arbitration_ID'] = df['Arbitration_ID'].apply(parse_id)
 
-# ========== Step 3: Build full feature list ==========
+# ========== Build full feature list ==========
 raw_cols = []
 ext_cols = [
     'frequency', 'data_mean', 'data_std', 'data_max', 'data_min',
@@ -43,7 +43,7 @@ ext_cols = [
 ] + [f'byte_{i}_mean' for i in range(8)] + [f'byte_{i}_std' for i in range(8)]
 feature_cols = raw_cols + ext_cols
 
-# ========== Step 4: Clean & prepare X, y ==========
+# ========== Clean & prepare X, y ==========
 X = (
     df[feature_cols]
       .replace([np.inf, -np.inf], np.nan)
@@ -54,12 +54,12 @@ X = (
 y = LabelEncoder().fit_transform(df['Class'].astype(str))
 class_names = LabelEncoder().fit(df['Class'].astype(str)).classes_
 
-# ========== Step 5: Train / test split ==========
+# ==========  Train / test split ==========
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3, random_state=42, stratify=y
 )
 
-# ========== Step 6: ANOVA F-value ==========
+# ========== ANOVA F-value ==========
 F_values, p_values = f_classif(X_train, y_train)
 anova_df = pd.DataFrame({
     'feature': feature_cols,
@@ -70,18 +70,18 @@ anova_df = pd.DataFrame({
 print("=== ANOVA F-value ranking ===")
 print(anova_df.to_string(index=False))
 
-# ========== Step 7: Build training set using top_k features ==========
+# ========== Build training set using top_k features ==========
 top_k = 40
 top_feats = anova_df['feature'].iloc[:top_k].tolist()
 Xtr = pd.DataFrame(X_train, columns=feature_cols)[top_feats].values
 Xte = pd.DataFrame(X_test,  columns=feature_cols)[top_feats].values
 
-# ========== Step 8: Train KNN ==========
+# ========== Train KNN ==========
 knn = KNeighborsClassifier(n_neighbors=2)  # n_neighbors and weights can be tuned
 knn.fit(Xtr, y_train)
 y_pred = knn.predict(Xte)
 
-# ========== Step 9: Output evaluation metrics ==========
+# ========== Output evaluation metrics ==========
 print(f"\nKNN accuracy using top {top_k} features: {accuracy_score(y_test, y_pred):.4f}\n")
 print(f"Precision: {precision_score(y_test, y_pred, average='weighted'):.4f}")
 print(f"Recall:    {recall_score(y_test, y_pred, average='weighted'):.4f}")
@@ -89,7 +89,7 @@ print(f"F1-Score:  {f1_score(y_test, y_pred, average='weighted'):.4f}\n")
 print("Classification report:")
 print(classification_report(y_test, y_pred, target_names=class_names))
 
-# ========== Step 10: Visualize confusion matrix ==========
+# ========== Visualize confusion matrix ==========
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(6,6))
 plt.imshow(cm, cmap='Blues', interpolation='nearest')
