@@ -102,6 +102,7 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import itertools
 
+# Load data 
 csv_path = r"C:\\Users\\whf80\\Desktop\\Car-Dataset\\CAN-MIRGU-main\\CAN-MIRGU.csv"
 df = pd.read_csv(csv_path)
 
@@ -197,11 +198,13 @@ with torch.no_grad():
 clf = LogisticRegression(max_iter=500).fit(emb_train, y_train)
 y_pred = clf.predict(emb_test)
 
+# Evaluation 
 acc = accuracy_score(y_test, y_pred)
 print(f"\nContrastive + Logistic Reg Accuracy: {acc:.4f}\n")
 print("Classification Report:")
 print(classification_report(y_test, y_pred, target_names=class_names))
 
+# Confusion Matrix 
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(6,6))
 plt.imshow(cm, cmap='Blues')
@@ -215,6 +218,7 @@ for i,j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
              color='white' if cm[i,j]>thresh else 'black')
 plt.tight_layout(); plt.show()
 
+# ROC Curve  
 y_test_bin = label_binarize(y_test, classes=range(len(class_names)))
 y_pred_bin = label_binarize(y_pred, classes=range(len(class_names)))
 if y_test_bin.shape[1] > 1:
