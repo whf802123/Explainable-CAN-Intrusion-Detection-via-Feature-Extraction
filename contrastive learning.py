@@ -102,7 +102,6 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 import itertools
 
-# ========== 1. 数据准备 ==========
 csv_path = r"C:\\Users\\whf80\\Desktop\\Car-Dataset\\CAN-MIRGU-main\\CAN-MIRGU.csv"
 df = pd.read_csv(csv_path)
 
