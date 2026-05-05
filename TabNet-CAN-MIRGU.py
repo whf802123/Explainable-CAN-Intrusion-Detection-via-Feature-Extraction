@@ -267,7 +267,7 @@ scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test  = scaler.transform(X_test)
 
-# 8. ANOVA F-value 特征选择（这里 top_k=全部特征）
+# ANOVA F-value Feature Selection 
 F_values, p_values = f_classif(X_train, y_train)
 anova_df = pd.DataFrame({
     'feature': feature_cols,
