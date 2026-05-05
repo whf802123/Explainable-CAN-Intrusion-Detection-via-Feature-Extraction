@@ -1,4 +1,5 @@
 
+'''
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -12,13 +13,11 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 import itertools
 
-# ========== Step 1: Load enhanced CSV ==========
-csv_path = r'C:\\Users\\Administrator\\Desktop\\enhanced-Car-Hacking.csv'
+# Load enhanced CSV
+csv_path = r'E:\B\1\data\Car-Dataset\Car_Hacking_Challenge_Dataset_rev20Mar2021\enhanced_can_dataset.csv'
 df = pd.read_csv(csv_path, encoding='utf-8')
 
-# ========== Step 2: Convert raw fields to numeric ==========
 df['Timestamp'] = pd.to_numeric(df['Timestamp'], errors='coerce')
-
 for col in ['Data']:
     df[col] = df[col].fillna('').astype('category').cat.codes
 
@@ -34,8 +33,7 @@ def parse_id(x):
     return x
 df['Arbitration_ID'] = df['Arbitration_ID'].apply(parse_id)
 
-# ========== Step 3: Build full feature list ==========
-raw_cols = []   # If you want to include raw fields, remove the comments above
+raw_cols = []
 ext_cols = [
     'frequency', 'data_mean', 'data_std', 'data_max', 'data_min',
     'entropy', 'is_all_zero', 'hamming_weight',
@@ -49,7 +47,6 @@ ext_cols = [
 ]
 feature_cols = raw_cols + ext_cols
 
-# ========== Step 4: Clean & prepare X, y ==========
 X = (
     df[feature_cols]
       .replace([np.inf, -np.inf], np.nan)
@@ -60,12 +57,12 @@ X = (
 y = LabelEncoder().fit_transform(df['Class'].astype(str))
 class_names = LabelEncoder().fit(df['Class'].astype(str)).classes_
 
-# ========== Step 5: Train / test split ==========
+# Split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3, random_state=42, stratify=y
 )
 
-# ========== Step 6: ANOVA F-value ==========
+# ANOVA F-value
 F_values, p_values = f_classif(X_train, y_train)
 anova_df = pd.DataFrame({
     'feature': feature_cols,
@@ -76,14 +73,13 @@ anova_df = pd.DataFrame({
 print("=== ANOVA F-value ranking ===")
 print(anova_df.to_string(index=False))
 
-# ========== Step 7: Train Random Forest using top_k features ==========
 top_k = 40
 top_feats = anova_df['feature'].iloc[:top_k].tolist()
 
 Xtr = pd.DataFrame(X_train, columns=feature_cols)[top_feats].values
 Xte = pd.DataFrame(X_test,  columns=feature_cols)[top_feats].values
 
-# —— Modified: use Random Forest
+# Random Forest
 rf = RandomForestClassifier(n_estimators=100, random_state=42)
 rf.fit(Xtr, y_train)
 y_pred = rf.predict(Xte)
@@ -100,7 +96,7 @@ print(f"F1-Score:  {f1:.4f}")
 print("Classification report:")
 print(classification_report(y_test, y_pred, target_names=class_names))
 
-# ========== Visualize confusion matrix ==========
+# Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(6,6))
 plt.imshow(cm, cmap='Blues', interpolation='nearest')
@@ -118,8 +114,6 @@ for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
              color="white" if cm[i, j] > thresh else "black")
 plt.tight_layout()
 plt.show()
-
-
 '''
 
 import pandas as pd
@@ -134,11 +128,11 @@ from sklearn.metrics import (
 import matplotlib.pyplot as plt
 import itertools
 
-# 1. Load raw data
-csv_path = r"C:\\Users\\Administrator\\Desktop\\Car-Hacking.csv"
+# Load data
+csv_path = r"E:\B\1\data\Car-Dataset\Car_Hacking_Challenge_Dataset_rev20Mar2021\Fin_host_session_submit_S.csv"
 df = pd.read_csv(csv_path)
 
-# 2. Parse Arbitration_ID (hexadecimal or float)
+# Arbitration_ID
 def parse_id(x):
     if isinstance(x, str):
         try:
@@ -152,37 +146,33 @@ def parse_id(x):
 
 df['Arbitration_ID'] = df['Arbitration_ID'].apply(parse_id)
 
-# 3. Split DATA field into Data0–Data7 (pad with zeros if missing)
+# Split DATA field into Data0–Data7 (pad with zeros if missing)
 for i in range(8):
     df[f'Data{i}'] = (
         df['Data'].fillna('').astype(str).str.split().str[i]
         .apply(lambda x: int(x, 16) if isinstance(x, str) and x else 0)
     )
 
-# 4. Prepare feature columns
+# Prepare feature columns
 feature_cols = ['Arbitration_ID'] + [f'Data{i}' for i in range(8)]
-
 df.drop(columns=['DLC'], errors='ignore', inplace=True)
-
 X = df[feature_cols].astype(np.float32).values
-
-# 5. Prepare labels
 le = LabelEncoder()
 y = le.fit_transform(df['Class'].astype(str))
 class_names = le.classes_
 
-# 6. Train / test split
+# Split
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3,
     stratify=y, random_state=42
 )
 
-# 7. Feature normalization
+# Feature normalization
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test  = scaler.transform(X_test)
 
-# 8. Train Random Forest
+# Train Random Forest
 rf = RandomForestClassifier(
     n_estimators=10,
     max_depth=None,
@@ -191,22 +181,18 @@ rf = RandomForestClassifier(
 )
 rf.fit(X_train, y_train)
 
-# 9. Predict
 y_pred = rf.predict(X_test)
-
-# 10. Output accuracy
 acc = accuracy_score(y_test, y_pred)
 print(f"Random Forest Test Accuracy: {acc:.4f}\n")
 
 precision = precision_score(y_test, y_pred, average='weighted')
 recall    = recall_score(y_test, y_pred, average='weighted')
 f1        = f1_score(y_test, y_pred, average='weighted')
-
 print(f"Precision: {precision:.4f}")
 print(f"Recall:    {recall:.4f}")
 print(f"F1-Score:  {f1:.4f}")
 
-# 11. Confusion matrix
+# Confusion matrix
 cm = confusion_matrix(y_test, y_pred)
 plt.figure(figsize=(6,6))
 plt.imshow(cm, cmap='Blues', interpolation='nearest')
@@ -225,11 +211,11 @@ for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
 plt.tight_layout()
 plt.show()
 
-# 12. Classification report
+# Classification report
 print("Classification Report:")
 print(classification_report(y_test, y_pred, target_names=class_names))
 
-# 13. Multi-class ROC curves
+# ROC Curves
 y_true_bin  = label_binarize(y_test,  classes=range(len(class_names)))
 y_score_bin = label_binarize(y_pred, classes=range(len(class_names)))
 if y_true_bin.shape[1] > 1:
@@ -247,4 +233,4 @@ if y_true_bin.shape[1] > 1:
     plt.show()
 else:
     print("ROC skipped: only one class present.")
-'''
+
