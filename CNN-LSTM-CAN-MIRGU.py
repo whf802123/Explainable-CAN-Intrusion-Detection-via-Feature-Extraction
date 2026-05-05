@@ -89,18 +89,15 @@ model = Sequential([
     Dropout(0.3),
     Dense(len(class_names), activation='softmax')
 ])
-
 model.compile(
     loss='sparse_categorical_crossentropy',
     optimizer='adam',
     metrics=['accuracy']
 )
-
 model.summary()
 
 # Train
 es = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-
 history = model.fit(
     X_train_seq, y_train,
     validation_split=0.1,
@@ -133,7 +130,6 @@ for i,j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
              color='white' if cm[i,j]>thresh else 'black')
 plt.tight_layout()
 plt.show()
-
 print("Classification Report:")
 print(classification_report(y_test, y_pred, target_names=class_names))
 
